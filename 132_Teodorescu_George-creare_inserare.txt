@@ -1,0 +1,418 @@
+drop table judete;
+--creare tabele
+create table JUDET(
+cod_judet varchar(2) constraint pk_judete primary key,
+nume_judet varchar(20) constraint null_judete_nume not null);
+
+create table LOCATIE(
+locatie_id number(6) constraint pl_locatie primary key,
+cod_judet varchar(2) constraint fk_loc_jud references judet(cod_judet),
+strada varchar(40),
+oras varchar(20) constraint null_loc_oras not null,
+numar number(6));
+
+create table MAGAZIN(
+magazin_id number(6) constraint pk_magazin primary key,
+locatie_id number(6) constraint fk_mag_loc references locatie(locatie_id),
+dimensiune number(6) constraint null_mag_dim not null,
+data_construire date constraint null_mag_data not null
+);
+
+alter table magazin add constraint unq_loc unique(locatie_id); 
+
+create table SEDIU(
+sediu_id number(6) constraint pk_sediu primary key,
+locatie_id number(6) constraint fk_sed_loc references locatie(locatie_id),
+dimensiune number(6) constraint null_sed_dim not null,
+data_construire date constraint null_sed_data not null,
+capacitate number(6));
+
+create table FUNCTIE(
+functie_id number(6) constraint pk_job primary key,
+denumire varchar(20) constraint null_job_den not null);
+
+create table DEPARTAMENT(
+departament_id number(6) constraint pk_departament primary key,
+manager_id number(6),
+nume_departament varchar(20));
+
+alter table departament
+add constraint fk_dep_ang foreign key(manager_id) references angajat(angajat_id);
+
+
+
+create table ANGAJAT(
+angajat_id number(6) constraint pk_angajat primary key,
+job_id number(6) constraint fk_ang_func references functie(functie_id),
+manager_id number(6) constraint fk_ang_ang references angajat(angajat_id),
+departament_id number(6) constraint fk_ang_dep references departament(departament_id),
+locatie_id number(6) constraint fk_ang_loc references locatie(locatie_id),
+nume varchar(20) constraint null_ang_nume not null,
+prenume varchar(20) constraint null_ang_prenume not null,
+data_angajare date constraint null_data_ang not null,
+nr_telefon varchar(20),
+email varchar(30),
+salary number(6) constraint null_ang_sal not null);
+alter table angajat
+add  MAGAZIN_ID number(6);
+alter table angajat
+add SEDIU_ID number(6);
+alter table angajat
+add constraint cck_sed_mag check((magazin_id is null and sediu_id is not null) or (sediu_id is null and magazin_id is not null));
+commit;
+
+create table CATEGORIE(
+categorie_id number(6) constraint pk_categorie primary key,
+nume_categorie varchar(20) constraint null_cat_num not null);
+
+
+create table PRODUS(
+produs_id number(6) constraint pk_produs primary key,
+categorie_Id number(6) constraint fk_prod_cat references categorie(categorie_id),
+pret number(6) constraint null_prod_pret not null,
+denumire varchar(20) constraint null_prod_den not null);
+
+create table STOC(
+produs_id number(6) constraint fk_stoc_prod references produs(produs_id),
+magazin_id number(6) constraint fk_prod_mag references magazin(magazin_id),
+cantitate number(6) constraint null_stoc_cant not null,
+constraint pk_stoc primary key(produs_id, magazin_id));
+alter table stoc add constraint cck_stoc_poz check(cantitate>=0);
+
+
+create table PF(
+pf_id number(6) constraint pk_pf primary key,
+nume varchar(20) constraint null_pf_nume not null,
+prenume varchar(20) constraint null_pf_pren not null,
+data_nastere date constraint null_pf_data   not null);
+
+create table PJ(
+pj_id number(6) constraint pk_pj primary key,
+denumire varchar(20) constraint null_pj_den not null);
+
+
+
+create table CLIENT(
+client_id number(6) constraint pk_client primary key,
+id_pf number(6) constraint fk_pf references pf(pf_id),
+id_pj number(6) constraint fk_pj references pj(pj_id),
+locatie number(6) constraint fk_client_loc references locatie(locatie_id),
+email varchar(20),
+nr_telefon varchar(20),
+constraint cck_tip_client check((id_pf is null and id_pj is not null) or (id_pf is not null and id_pj is null)));
+alter table client add constraint unq_cl_pf unique(id_pj); 
+alter table client add constraint unq_cl_pj unique(id_pf); 
+
+
+create table FACTURA(
+factura_id number(6) constraint pk_factura primary key,
+client_id number(6) constraint fk_fact_client references client(client_id),
+magazin_id number(6) constraint fk_fact_mag references magazin(magazin_id),
+data_achizitie date constraint null_fact_data not null);
+
+create table ATASAT(
+factura_id number(6) constraint fk_at_factura references factura(factura_id),
+produs_id number(6) constraint fk_at_produs references produs(produs_id),
+cantitate number(6) constraint null_at_cant not null,
+constraint pk_atasat primary key(factura_id, produs_id));
+
+
+
+CREATE SEQUENCE secventa
+start with 1
+increment by 1;
+
+CREATE SEQUENCE secv_mag
+start with 100
+increment by 1;
+
+
+insert into locatie
+values(secventa.nextval, 'B', 'Sos Victoriei','Bucuresti',123);
+insert into locatie
+values(secventa.nextval, 'B', 'Telescopului','Bucuresti',145);
+insert into locatie
+values(secventa.nextval, 'CJ', 'Aviatorilui','Cluj-Napoca',13);
+insert into locatie
+values(secventa.nextval, 'CT', 'Soarelui','Constanta',45);
+insert into locatie
+values(secventa.nextval, 'CT', 'Soarelui','Constanta',47);
+insert into locatie
+values(secventa.nextval, 'PH', 'Nordului','Ploiesti',132);
+insert into locatie
+values(secventa.nextval, 'CT', 'Aviatorilor','Constanta',59);
+insert into locatie
+values(secventa.nextval, 'CT', 'Aviatorilor','Constanta',89);
+insert into locatie
+values(secventa.nextval, 'B', 'Malului','Bucuresti',145);
+insert into locatie
+values(secventa.nextval, 'CJ', 'Aviatorilor','Cluj-Napoca',13);
+insert into locatie
+values(secventa.nextval, 'CT', 'Abecedarului','Cluj-Napoca',60);
+insert into locatie
+values(secventa.nextval, 'CT', 'Abecedarului','Cluj-Napoca',90);
+commit;
+
+update locatie
+set cod_judet='CJ'
+where locatie_id=9;
+
+insert into magazin
+values(secv_mag.nextval, 2, 234, '01-jan-2002');
+insert into magazin
+values(secv_mag.nextval, 3, 150, '08-jun-2005');
+insert into magazin
+values(secv_mag.nextval, 1, 160, '09-jun-2010');
+insert into magazin
+values(secv_mag.nextval, 5, 180, '13-aug-2006');
+insert into magazin
+values(secv_mag.nextval, 4, 130, '26-oct-2004');
+
+
+insert into sediu
+values(100, 2, 432, '01-jan-2003',150);
+insert into sediu
+values(101, 3, 150, '08-jun-2002',50);
+insert into sediu
+values(102, 1, 160, '09-jun-2010',40);
+insert into sediu
+values(103, 5, 180, '13-aug-2006', 51);
+insert into sediu
+values(104, 9, 120, '26-oct-2004', 60);
+
+
+delete from magazin
+where 1>0;
+rollback;
+
+
+insert into functie
+values(1, 'CEO');
+insert into functie
+values(2, 'Paznic');
+insert into functie
+values(3, 'Casier');
+insert into functie
+values(4, 'Vanzator');
+insert into functie
+values(5, 'Om-de-servici');
+insert into functie
+values(6, 'Expert-markerting');
+insert into functie
+values(7, 'Expert-HR');
+insert into functie
+values(8, 'Programator');
+insert into functie 
+values(9, 'Manager-magazin');
+commit;
+
+
+insert into departament
+values(100, null, 'Management');
+insert into departament
+values(101, null, 'Paza');
+insert into departament
+values(102, null, 'Mentenanta');
+insert into departmanet
+values(103, null, 'Marketing');
+insert into departament
+values(104, null, 'HR');
+insert into departament
+values(105, null, 'Vanzari');
+commit;
+
+delete from angajat;
+
+insert into angajat
+values(100, 1, null, 100, 3, 'Teodorescu', 'George', '02-oct-2002', '0733333333', 'tgt@yahoo.com', 10000, null,101);
+
+insert into angajat
+values(102, 9, 100, 100, 3, 'Ionescu', 'Alex', '02-feb-2003', '0733333444', 'ialex@yahoo.com', 4000, 100, null);
+
+insert into angajat
+values(103, 3, 102, 105, 4, 'Popescu', 'Andrei', '03-feb-2004', '0754303030', 'pandrei@yahoo.com', 2000, 100, null);
+
+insert into angajat
+values(104, 5, 102, 105, 7, 'Marinescu', 'Marius', '07-jun-2004', '0754023132', 'mmarius@yahoo.com', 2000, 100, null);
+rollback;
+
+insert into angajat
+values(105, 9, 100, 100, 9, 'Titulescu', 'Alex', '02-feb-2003', '0733333444', 'talex@yahoo.com', 3000, 101, null);
+
+insert into angajat
+values(106, 3, 105, 105, 21, 'Ionescu', 'LUCA', '02-feb-2006', '0733333444', 'iluca@yahoo.com', 2000, 101, null);
+
+insert into angajat
+values(107, 5, 105, 105, 22, 'Alexandrescu', 'Mihai', '05-feb-2006', '0712234423','amihai@gmail.com', 2000, 101, null); 
+
+insert into angajat
+values(108, 7, 100, 105, 2, 'Popescu', 'Mihai', '05-feb-2006', '0712234423','pmihai@gmail.com', 5000, null, 102);
+commit;
+
+update departament
+set manager_id=108
+where departament_id in(104);
+commit;
+
+
+insert into categorie
+values(1, 'Sisteme');
+insert into categorie
+values(2, 'Casti');
+insert into categorie
+values(3, 'Monitoare');
+insert into categorie
+values(4, 'Tastaturi');
+insert into categorie
+values(5, 'Mousepads');
+insert into categorie
+values(6, 'Boxe');
+commit;
+
+
+insert into produs
+values(100, 1, 9000, 'Sistem-asus');
+insert into produs
+values(101, 1, 7000, 'Sistem-dell');
+insert into produs
+values(102, 3, 3000, 'Monitor-asus');
+insert into produs
+values(103, 3, 1500, 'Monitor-samsung');
+insert into produs
+values(104, 4, 350, 'Tastatura-razer');
+insert into produs
+values(105, 4, 700, 'Tastatura-rog');
+insert into produs
+values(106,2, 900, 'Casti-razer');
+commit;
+
+insert into stoc
+values(100, 101, 3);
+insert into stoc
+values(100, 103, 5);
+insert into stoc
+values(100, 104, 0);
+insert into stoc
+values(101, 102, 4);
+insert into stoc
+values(103, 104, 3);
+insert into stoc
+
+values(105, 104, 3);
+insert into stoc
+values(103, 100, 5);
+
+insert into stoc
+values(102, 103, 4);
+insert into stoc
+values(106, 101, 0);
+insert into stoc
+values(103, 102, 6);
+insert into stoc
+values(103, 101, 3);
+commit;
+
+
+insert into pf
+values(1, 'Ionescu', 'Matei', '01-jan-1990');
+insert into pf
+values(2, 'Constantinescu' , 'Mihai', '10-oct-2001');
+insert into pf
+values(3, 'Stefanescu', 'Alex', '12-jan-2003');
+insert into pf
+values(4, 'Popa', 'Robert', '25-jul-2005');
+insert into pf
+values(5, 'Popescu', 'Iulian', '30-may-2006');
+commit;
+
+insert into pj
+values(1, 'Bitdefender');
+insert into pj
+values(2, 'Xerox_SRL');
+insert into pj
+values(3, 'Reparatii_SRL');
+insert into pj
+values(4, 'LibrarieOnline');
+insert into pj
+values(5, 'MATEI_SRL');
+rollback;
+
+
+insert into client
+values(100, 1, null, 3, 'abc@gmail.com', '0777777777');
+insert into client
+values(101, null, 2, 4, 'fgb@yahoo.com', '0777777777');
+insert into client
+values(102, null, 3, 5, 'oip@yahoo.com', '0777777897');
+insert into client
+values(103, null, 4, 6, 'ads@yahoo.com', '0777777777');
+insert into client
+values(104, null, 5, 6, 'asa@yahoo.com', '0777777777');
+insert into client
+values(105, null, 1, 6, 'asa@yahoo.com', '0777777777');
+insert into client
+values(106, 2, null, 6, 'asa@yahoo.com', '0777777777');
+insert into client
+values(107, 3, null, 22, 'asa@yahoo.com', '0777777777');
+insert into client
+values(108, 4, null, 21, 'asda@gmail.com', '0777778888');
+commit;
+
+insert into factura
+values(100, 100, 100, '02-feb-2002');
+insert into factura
+values(101, 102, 100, '04-feb-2002');
+insert into factura
+values(102, 104, 100, '04-feb-2002');
+insert into factura
+values(103, 104, 102, '04-feb-2010');
+insert into factura
+values(104, 100, 102, '04-feb-2010');
+insert into factura
+values(105, 105, 102, '04-feb-2010');
+insert into factura
+values(106, 105, 103, '09-sep-2006');
+insert into factura
+values(107, 107, 103, '09-sep-2006');
+insert into factura
+values(108, 108, 103, '10-sep-2006');
+insert into factura
+values(109, 108, 104, '10-nov-2004');
+insert into factura
+values(110, 108, 104, '10-nov-2004');
+commit;
+
+insert into atasat
+values(100, 100, 2);
+insert into atasat
+values(100, 101, 1);
+insert into atasat
+values(101, 103, 4);
+insert into atasat
+values(101, 104, 4);
+insert into atasat
+values(102, 101, 2);
+insert into atasat
+values(103,  104, 3);
+insert into atasat
+values(104, 106, 2);
+insert into atasat
+values(104, 102, 1);
+insert into atasat
+values(105, 101, 2);
+insert into atasat
+values(106, 104, 3);
+insert into atasat
+values(107, 102, 1);
+insert into atasat
+values(108, 101, 3);
+insert into atasat
+values(109, 100, 5);
+insert into atasat
+values(109, 101, 5);
+insert into atasat
+values(105, 100, 6);
+insert into atasat
+values(110, 100, 6);
+
+commit;

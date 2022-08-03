@@ -1,0 +1,114 @@
+select f.client_id, sum(NR)
+from factura f,
+(select f.factura_id, sum(a.cantitate) NR
+from factura f, atasat a,
+                            (select p.produs_id PID
+                             from produs p, categorie c
+                             where p.categorie_id=c.categorie_id 
+                             and lower(nume_categorie) like '%sisteme%') b
+where f.factura_id=a.factura_id and a.produs_id=PID
+group by f.factura_id
+) numar
+where f.factura_id=numar.factura_id
+group by f.client_id
+having sum(NR)>=5
+order by 2;
+
+
+select angajat_id
+from angajat a
+where exists( select 1
+              from angajat b
+              where b.departament_id=a.departament_id
+              and exists(select 1
+                         from angajat c
+                         where c.locatie_id=b.locatie_id and b.angajat_id!=angajat_id and b.departament_id=departament_Id))
+and instr(lower(nume),'ul')!=0;
+              
+              
+
+select instr('asd', 'a',1)
+from dual;
+
+
+select produs_id
+from stoc 
+where magazin_id in (select magazin_id
+                     from magazin
+                     where data_construire>(to_date('01-jan-2005')) and months_between(data_construire,to_date('01-jan-2005'))<=7
+                     and locatie_id in(select locatie_id
+                                        from locatie l, judet j
+                                        where l.cod_judet=j.cod_judet
+                                        and lower(trim(j.nume_judet)) = 'cluj'))
+and cantitate>0;
+                    
+                    
+with nr_ang as(
+select sum(salary) SUMA, nume_departament NUME
+from departament d, angajat a
+where a.departament_id(+)=d.departament_id
+group by nume_departament)
+select decode(nvl(suma,0), 0, 0, suma), nume
+from nr_ang;
+
+
+select angajat_id, case 
+        when to_char(last_day(data_angajare),'d')='1' then 'YES' 
+        else 'NO'
+        end
+from angajat;
+
+
+update angajat
+set manager_id=&mng_cod
+where departament_id=(select departament_id from angajat where angajat_id=&ang_cod);
+rollback;
+
+
+delete from departament
+where departament_id not in (select distinct departament_id from angajat);
+
+update locatie
+set strada='&sir'
+where cod_judet=(select cod_judet from judet where trim(nume_judet)='&cod_judet');
+
+insert into stoc
+values(105, 100, 3);
+
+select nvl(sum(salary),0), j.cod_judet
+from angajat a, magazin m, locatie l, judet j
+where a.magazin_id(+)=m.magazin_id and m.locatie_id(+)=l.locatie_id and l.cod_judet(+)=j.cod_judet
+group by j.cod_judet;
+
+
+with bucuresti as(select locatie_id from locatie where cod_judet='B')
+select produs_id
+from stoc s
+where not exists(
+                    select m.magazin_id
+                    from magazin m
+                    where not exists(
+                                     select magazin_id
+                                     from stoc
+                                     where magazin_id=m.magazin_id and produs_id=s.produs_id
+                                     and s.cantitate=0)
+                                     and m.locatie_id in (select * from bucuresti));
+
+with numar as(select count(magazin_id) NR from magazin m, locatie l where l.cod_judet='B' and m.locatie_id=l.locatie_Id)
+select produs_id
+from stoc
+where magazin_id in (select magazin_id NR from magazin m, locatie l where l.cod_judet='B' and m.locatie_id=l.locatie_Id)
+group by produs_id
+having count(magazin_id) = (select NR from numar);
+
+select client_id
+from (select distinct client_id from factura) c
+where not exists(
+                 select magazin_id
+                 from magazin
+                 where data_construire>to_date('01-01-2006','dd-mm-yyyy')
+                 minus
+                 select magazin_id
+                 from factura f
+                 where c.client_id=f.client_id
+);
